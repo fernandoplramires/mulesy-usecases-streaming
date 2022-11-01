@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<global-property doc:name="Global Property" doc:id="5fff9fd9-dd40-4586-9626-2af1142f0c86" name="mule.key" value="123456789abcdefg" />
+	<configuration-properties doc:name="Configuration properties" doc:id="07cbffa3-7e64-4801-9117-fa870e6735e6" file="properties\dev.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="11bdd3a1-288c-4247-9868-285b937d38d0" file="properties\secure-dev.yaml" key="${mule.key}" />
+	<tls:context name="TLS_Context" doc:name="TLS Context" doc:id="db7090cc-4686-4412-a68a-c617540b9dc4" >
+		<tls:trust-store insecure="true" />
+	</tls:context>
+</mule>
