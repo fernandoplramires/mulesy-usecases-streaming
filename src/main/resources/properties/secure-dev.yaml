@@ -1,0 +1,11 @@
+ftp:
+  config:
+    connection:
+      username: "![QSG7UnFgxR/wxARfSgbixw==]"
+      password: "![mrXvXMztP/6BKG8PaW+6ug==]"
+
+mongo:
+  config:
+    connection:
+      username: "![QSG7UnFgxR/wxARfSgbixw==]"
+      password: "![mrXvXMztP/6BKG8PaW+6ug==]"

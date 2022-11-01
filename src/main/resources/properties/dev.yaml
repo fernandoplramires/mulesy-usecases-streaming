@@ -1,0 +1,23 @@
+ftp:
+  config:
+    connection:
+      host: "robosh.files.com"
+      port: "21"
+      username: "${secure::ftp.config.connection.username}"
+      password: "${secure::ftp.config.connection.password}"
+
+mongo:
+  config:
+    writeConcernAcknowledgement: "majority"
+    connection:
+      database: "mulesoft"
+      username: "${secure::mongo.config.connection.username}"
+      password: "${secure::mongo.config.connection.password}"
+      authenticationMechanism: "SCRAM_SHA_1"
+      authenticationSource: "admin"
+      server-addresses:
+        host-01: "ac-hv5rgxa-shard-00-01.xpi98zq.mongodb.net"
+        host-02: "ac-hv5rgxa-shard-00-02.xpi98zq.mongodb.net"
+        host-03: "ac-hv5rgxa-shard-00-00.xpi98zq.mongodb.net"
+  insert-documents:
+    collectionName: "new-york-city-taxi-fare-prediction"

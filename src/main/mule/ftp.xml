@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd">
+	<ftp:config name="FTP_Config" doc:name="FTP Config" doc:id="91a6427d-355b-4e22-9582-c0266c9b00c6" >
+		<ftp:connection host="${ftp.config.connection.host}" username="${ftp.config.connection.username}" password="${ftp.config.connection.password}" port="${ftp.config.connection.port}"/>
+	</ftp:config>
+	<ftp:matcher name="Matcher" doc:name="Matcher" doc:id="e1ac35c3-4886-4492-82f7-d8befb36f7b6" filenamePattern="*.csv" />
+	<flow name="ftp-process-and-write-in-mongodb-Flow" doc:id="02b4bb7a-127c-4a7e-b3a4-7d5106f84fb8">
+			<ftp:listener doc:name="robosh.files.com/input/streaming" doc:id="9fb2f7ec-64f3-4b29-bd9a-82125fa444e1" config-ref="FTP_Config" outputMimeType="application/csv; streaming=true" recursive="false" matcher="Matcher" moveToDirectory="/output" directory="/input/streaming" overwrite="true">
+			<scheduling-strategy >
+				<fixed-frequency frequency="60" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</ftp:listener>
+		<logger level="INFO" doc:name="[METRIC] [STREAMING] Start" doc:id="7b7c0d2f-9a77-4b6d-b458-321ed4639aba" message="[METRIC] [STREAMING] Starting process file: #[attributes.path]/#[attributes.fileName]"/>
+		<set-variable value="#[now()]" doc:name="Start Timestamp for Metric" doc:id="d36f0b75-14d3-4a62-9e39-0fe9efd88bc0" variableName="startTimestamp"/>
+		<ee:transform doc:name="Convert CSV to JSON" doc:id="531e424d-4fd9-48d1-9d69-8fee342caff3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json deferred=true
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="(MongoDB) Insert JSON" doc:id="c7b283c5-7955-40cf-955a-87d4f03ceeb7" name="mongodb-insert-documents-Flow"/>
+		<set-variable value="#[(now() - vars.startTimestamp).seconds]" doc:name="Total Processing Time in seconds" doc:id="5c1703f1-2101-4901-bd18-c7fe3a007dc0" variableName="totalProcessingTimeInSeconds"/>
+		<logger level="INFO" doc:name="[METRIC] [STREAMING] Total Processing Time in seconds" doc:id="66e03eb3-a370-4c24-981c-ee97a7890cc9" message="[METRIC] [STREAMING] Total processing time in: #[vars.totalProcessingTimeInSeconds] seconds"/>
+	</flow>
+	<flow name="ftp-process-not-streamming-and-write-in-mongodb-Flow" doc:id="a91fbc70-0047-492c-8532-ff836cbb911a" >
+		<ftp:listener doc:name="robosh.files.com/input/nostreaming" doc:id="35168789-d67e-4fa1-ac23-e10ec95ed8d5" config-ref="FTP_Config" directory="/input/nostreaming" recursive="false" moveToDirectory="/output" outputMimeType="application/csv; streaming=false" matcher="Matcher" overwrite="true">
+			<scheduling-strategy >
+				<fixed-frequency frequency="60" timeUnit="SECONDS" startDelay="60"/>
+			</scheduling-strategy>
+		</ftp:listener>
+		<logger level="INFO" doc:name="[METRIC] [NO-STREAMING] Start" doc:id="c66812e9-5af3-49ca-a775-2a75a753f26c" message="[METRIC] [NO-STREAMING] Starting process file: #[attributes.path]/#[attributes.fileName]" />
+		<set-variable value="#[now()]" doc:name="Start Timestamp for Metric" doc:id="4f32f30e-f77a-4e63-a294-2f39786de374" variableName="startTimestamp" />
+		<ee:transform doc:name="Convert CSV to JSON" doc:id="0cdac21f-03b1-4dc3-a467-cb05fbd24019" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="(MongoDB) Insert JSON" doc:id="6785a163-f5b2-4949-a458-92d4e21acf87" name="mongodb-insert-documents-Flow" />
+		<set-variable value="#[(now() - vars.startTimestamp).seconds]" doc:name="Total Processing Time in seconds" doc:id="84ab7901-d1b9-4d7e-8452-cee64b9fd668" variableName="totalProcessingTimeInSeconds" />
+		<logger level="INFO" doc:name="[METRIC] [NO-STREAMING] Total Processing Time in seconds" doc:id="c1e8ef2f-27ef-46e5-8b45-34a9ec200455" message="[METRIC] [NO-STREAMING] Total processing time in: #[vars.totalProcessingTimeInSeconds] seconds" />
+	</flow>
+</mule>
